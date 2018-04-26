@@ -48,7 +48,6 @@ class TwitterUser:
         
     def computerelations(self):
         for tweet in self.tweets:
-            #tokenise the actual tweet content (use the tokeniser in preprocess!):
             words = tweet.message.split()
             #Search for @username tokens, extract the username, and call self.addrelation()
             for word in words:
@@ -103,9 +102,6 @@ class TwitterGraph:
                         # TweetUser instances
                 
         #Load the twitter corpus 
-        #tip: use preprocess.find_corpusfiles and preprocess.read_corpus_file,
-        #do not use preproces.readcorpus as that will include sentence segmentation
-        #which we do not want
         print("Extracting corpus from " + corpusdirectory +" ...")
         corpus = make_twittercorpus(corpusdirectory)
         print("Corpus extracted!")
