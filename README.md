@@ -3,4 +3,4 @@ Simple tools written in Python for extracting big data related to tweets. Includ
 
 You can find the required data using this link: http://lst.science.ru.nl/~proycon/twitterdata.zip
 
-*Requires mathplotlib for running data visualization tools. Run in Python3 to avoid issues.
+*Requires mathplotlib and numpy for running data visualization tools. Run in Python3 to avoid issues.
