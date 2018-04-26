@@ -1,13 +1,19 @@
 from preprocesstweet import make_twittercorpus, get_username
 import numpy as np
 import matplotlib.pyplot as plt
-
+import datetime
 
 class Tweet:    
-    def __init__(self, message, time):
+    def __init__(self, message, time, date):
         self.message = message
         self.time = time
+        self.date = date
         
+    def get_weekday(self):
+        year = int(self.date[:4])
+        month = int(self.date[5:7])
+        day = int(self.date[8:10])
+        return datetime.date(year, month, day).weekday()
 
 class TwitterUser:
     def __init__(self, name):
@@ -84,6 +90,9 @@ class TwitterUser:
                 alpha=0.4, color='b', tick_label= names)
         plt.xticks(rotation=90)
         plt.show()
+    
+    def getTweets(self):
+        return self.tweets
         
  
         
@@ -100,7 +109,7 @@ class TwitterGraph:
         print("Extracting corpus from " + corpusdirectory +" ...")
         corpus = make_twittercorpus(corpusdirectory)
         print("Corpus extracted!")
-        print("Creating twitter graph...")
+        print("Extracting tweets and user data...")
         #Each txt file contains the tweets of one user.
         #all files contain three columns, separated by a TAB (\t). The first column
         #is the user, the second the time, and the third is the tweetmessage itself.
@@ -115,8 +124,9 @@ class TwitterGraph:
             for word in tweet[2]:
                 if word[0] is '@':
                     tweet_message = tweet[2]
-                    tweet_time = tweet[1]
-                    new_tweet = Tweet(tweet_message, tweet_time)
+                    tweet_date = tweet[1][:11]
+                    tweet_time = tweet[1][11:]
+                    new_tweet = Tweet(tweet_message, tweet_time, tweet_date)
                     user_name = tweet[0]
                         
                     #print("Following tweet contains mention: " + tweet[2])
@@ -124,16 +134,16 @@ class TwitterGraph:
                         #print("Old user found: " + user_name)
                         self.users[user_name].tweets.append(new_tweet)
                     else:
-                        print("New user found: " + user_name)
+                       # print("New user found: " + user_name)
                         new_user = TwitterUser(user_name)
                         new_user.tweets.append(new_tweet)
                         self.users[user_name] = new_user
-        print("Valid tweets extracted! Computing relations...")                    
+        print("Data extracted! Computing relations...")                    
         #Compute relations between users
         for user in self.users:
             #assert isinstance(user,TwitterUser)
             self.users[user].computerelations()
-        print("Relations computed! Printing relation charts.")
+        print("Relations computed!")
 
     
     def __contains__(self, user):
@@ -148,13 +158,71 @@ class TwitterGraph:
     def __getitem__(self, user):    
         #Retrieve the specified user
         return self.users[user]
+    
+def averageTimePerHour(twittergraph):
+    print("Printing activity graph.")
+    times = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    count = 0
+    user_times = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    user_count = 0
+    for twitteruser in twittergraph:
+        for tweet in twittergraph[twitteruser.name].getTweets():
+            hour = tweet.time[:2]
+            if hour is '':
+                hour = 00
+            print(tweet.time)
+            user_times[int(hour)] += 1
+            user_count += 1
+        for hour in range(len(times)):
+            user_times[int(hour)] = user_times[int(hour)]/user_count
+            times[int(hour)] += user_times[int(hour)]
+        count += 1
+        user_count = 0
+
+    for hour in range(len(times)):
+        times[int(hour)] = times[int(hour)]/24
+        print(str(hour)+ ": "+ str(times[int(hour)]))
+    plt.plot([x for x in range(24)],times)
+    plt.ylabel('Average Number of Tweet (per user)')
+    plt.xticks(np.arange(24))
+    plt.xlabel('Hour')
+    plt.show()
+
+def popularHourPerDay(twittergraph):
+    print("Calculating most popular hours per day...")
+    chart = np.zeros((7, 25))
+    days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+    total_num_tweets = 0
+    
+    for twitteruser in twittergraph:
+        for tweet in twittergraph[twitteruser.name].getTweets():
+            total_num_tweets += 1
+            if tweet.date is '':
+                day = 0
+            else:
+                day = tweet.get_weekday()
+            hour = tweet.time[:2]
+            if hour is '':
+                hour = 0
+            else:
+                hour = int(hour)
+            chart[day][hour] += 1
+            chart[day][24] += 1
             
+        week = [0 for x in range(7)] 
+        averages = [0 for x in range(7)]
+        for day in range(7):
+            max_num_tweets = 0
+            most_popular_hour = 0
+            for hour in range(24):
+                if chart[day][hour] > max_num_tweets:
+                    max_num_tweets = chart[day][hour]
+                    most_popular_hour = hour
+                average_num_tweets = chart[day][most_popular_hour] / chart[day][24]
+                week[day] = most_popular_hour
+                averages[day] = average_num_tweets  
+    print("\nMOST POPULAR HOURS PER DAY")
+    for day in range(7):
+        print(days[day]+": \t"+ str(week[day]).zfill(2) + ":00 "+"\t Average number of tweets per user: " + str(averages[day]))
 
-#this is the actual main body of the program. The program should be passed one parameter
-#on the command line: the directory that contains the *.txt files from twitterdata.zip.
-
-#We instantiate the graph, which will load and compute all relations
-twittergraph = TwitterGraph("data/twitterdata/")
-#We output all relations:
-for twitteruser in twittergraph:
-    twittergraph[twitteruser.name].RelationGraph()
+twittergraph = TwitterGraph("twitterdata/") 
