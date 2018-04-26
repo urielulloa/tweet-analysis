@@ -3,8 +3,6 @@ Code was written following an online guide from http://www.karsdorp.io/python-co
 Unless noted, all code was written by me
 
 Functions to preprocesses text files.
-
-TO DO: Create functions to extract data from multiple txt files
  """
 
 from os import listdir
