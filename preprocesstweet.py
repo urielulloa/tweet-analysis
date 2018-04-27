@@ -9,12 +9,11 @@ from os import listdir
  
 def read_file(filename):
     "Read the contents of FILENAME and return as a string."
-    infile = open(filename) # windows users should use codecs.open after importing codecs
+    infile = open(filename)
     contents = infile.read()
     infile.close()
     return contents 
  
- #Code taken from guide
 def remove_punc(text):
     "Removes punctation from a text."
     punctuation = '!#$%^&*()+={}[]:;"\'|<>,.?/~`'
@@ -27,7 +26,7 @@ def remove_punc(text):
 def clean_text(text):
     return remove_punc(text)
 
-#Fucntion written by me 
+
 def end_of_sentence_marker(character):
     """Returns True if the character is a period, question mark, or exclaimation point."""
     sentence_marker = ".?!"
@@ -36,10 +35,6 @@ def end_of_sentence_marker(character):
     else:
         return False
 
-#Most of function taken from class.
-"""I added code that covers an edge case where the text is a single sentence with no punctuation.
-While covering this edge case might seem not very useful, it proves useful when trying to tokenize text that is missing punctuation. 
-"""
 def split_sentences(text):
     """Split a text string into a list of sentences."""
     sentences = []
@@ -52,8 +47,7 @@ def split_sentences(text):
     if len(sentences) == 0:
         sentences.append(text)
     return sentences
-
-#Functin written by me    
+  
 def tokenize(text):
     """Transform TEXT into a list of sentences. Lowercase 
     each sentence and remove all punctuation. Finally split each
