@@ -2,6 +2,7 @@ from preprocesstweet import make_twittercorpus, get_username
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
+import pandas as pd
 
 class Tweet:    
     def __init__(self, message, time, date):
@@ -48,6 +49,7 @@ class TwitterUser:
         
     def computerelations(self):
         for tweet in self.tweets:
+            #tokenise the actual tweet content (use the tokeniser in preprocess!):
             words = tweet.message.split()
             #Search for @username tokens, extract the username, and call self.addrelation()
             for word in words:
@@ -60,13 +62,13 @@ class TwitterUser:
             print(relation)
  
         
-    def gephioutput(self): 
+    def make_relationship_csv(self): 
         #produce CSV output that gephi can import
         for recipient, weight in self.relations.items():
             for i in range(0, weight):
                 yield self.name + "," + recipient
                 
-    def RelationGraph(self):
+    def relation_graph(self):
         
         if len(self.relations) < 10:
             return
@@ -93,6 +95,8 @@ class TwitterUser:
     def getTweets(self):
         return self.tweets
         
+    def get_username(self):
+        return self.name
  
         
 class TwitterGraph:
@@ -102,6 +106,9 @@ class TwitterGraph:
                         # TweetUser instances
                 
         #Load the twitter corpus 
+        #tip: use preprocess.find_corpusfiles and preprocess.read_corpus_file,
+        #do not use preproces.readcorpus as that will include sentence segmentation
+        #which we do not want
         print("Extracting corpus from " + corpusdirectory +" ...")
         corpus = make_twittercorpus(corpusdirectory)
         print("Corpus extracted!")
@@ -166,7 +173,7 @@ def averageTimePerHour(twittergraph):
             hour = tweet.time[:2]
             if hour is '':
                 hour = 00
-            print(tweet.time)
+            #print(tweet.time)
             user_times[int(hour)] += 1
             user_count += 1
         for hour in range(len(times)):
@@ -177,12 +184,14 @@ def averageTimePerHour(twittergraph):
 
     for hour in range(len(times)):
         times[int(hour)] = times[int(hour)]/24
-        print(str(hour)+ ": "+ str(times[int(hour)]))
+       # print(str(hour)+ ": "+ str(times[int(hour)]))
+    #plt.hist([x for x in range(24)], 24, weights=times)
     plt.plot([x for x in range(24)],times)
     plt.ylabel('Average Number of Tweet (per user)')
     plt.xticks(np.arange(24))
     plt.xlabel('Hour')
     plt.show()
+    return times
 
 def popularHourPerDay(twittergraph):
     print("Calculating most popular hours per day...")
@@ -221,4 +230,29 @@ def popularHourPerDay(twittergraph):
     for day in range(7):
         print(days[day]+": \t"+ str(week[day]).zfill(2) + ":00 "+"\t Average number of tweets per user: " + str(averages[day]))
 
+
+def make_csv(twittergraph, filepath):
+    print("Making CSV file...")
+    csv = open(filepath + "twitter.csv", 'w') 
+    csv.write("username\tdate\tday\ttime\tmessage\n")
+    for twitteruser in twittergraph:
+        username = twitteruser.get_username()
+        for tweet in twittergraph[username].getTweets():
+            time = tweet.time
+            if tweet.date is '':
+                date = str("NaN")
+                weekday = str("NaN")
+            else:
+                date = tweet.date
+                weekday = str(tweet.get_weekday())
+            message = tweet.message
+            csv.write(username+"\t"+date+"\t"+weekday+"\t"+time+"\t"+message+"\n")
+    csv.close()
+    print("twitter.csv created!")
+            
+
+def read_csv(filepath):
+    return pd.read_csv(filepath+"twitter.csv", sep = "\t")
+
 twittergraph = TwitterGraph("twitterdata/") 
+make_csv(twittergraph, "data/")
