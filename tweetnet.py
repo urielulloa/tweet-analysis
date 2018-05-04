@@ -162,12 +162,11 @@ class TwitterGraph:
         #Retrieve the specified user
         return self.users[user]
     
-def averageTimePerHour(twittergraph):
+def ActivityPerHour(twittergraph):
     print("Printing activity graph.")
     times = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     count = 0
     user_times = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    user_count = 0
     for twitteruser in twittergraph:
         for tweet in twittergraph[twitteruser.name].getTweets():
             hour = tweet.time[:2]
@@ -175,19 +174,14 @@ def averageTimePerHour(twittergraph):
                 hour = 00
             #print(tweet.time)
             user_times[int(hour)] += 1
-            user_count += 1
         for hour in range(len(times)):
-            user_times[int(hour)] = user_times[int(hour)]/user_count
             times[int(hour)] += user_times[int(hour)]
         count += 1
-        user_count = 0
-
-    for hour in range(len(times)):
-        times[int(hour)] = times[int(hour)]/24
        # print(str(hour)+ ": "+ str(times[int(hour)]))
-    #plt.hist([x for x in range(24)], 24, weights=times)
-    plt.plot([x for x in range(24)],times)
-    plt.ylabel('Average Number of Tweet (per user)')
+    hours = np.arange(24)
+    plt.bar(hours,times, 0.75)
+    #plt.plot(hours,times)
+    plt.ylabel('Average Number of Tweets per Hour')
     plt.xticks(np.arange(24))
     plt.xlabel('Hour')
     plt.show()
@@ -229,18 +223,19 @@ def popularHourPerDay(twittergraph):
     print("\nMOST POPULAR HOURS PER DAY")
     for day in range(7):
         print(days[day]+": \t"+ str(week[day]).zfill(2) + ":00 "+"\t Average number of tweets per user: " + str(averages[day]))
+    return week
 
 
-def make_csv(twittergraph, filepath):
+def make_csv(twittergraph, filepath, filename = "tweets.csv"):
     print("Making CSV file...")
-    csv = open(filepath + "twitter.csv", 'w') 
+    csv = open(filepath + filename, 'w') 
     csv.write("username\tdate\tday\ttime\tmessage\n")
     for twitteruser in twittergraph:
         username = twitteruser.get_username()
         for tweet in twittergraph[username].getTweets():
             time = tweet.time
             if tweet.date is '':
-                date = str("NaN")
+                date = str("NaT")
                 weekday = str("NaN")
             else:
                 date = tweet.date
@@ -248,11 +243,22 @@ def make_csv(twittergraph, filepath):
             message = tweet.message
             csv.write(username+"\t"+date+"\t"+weekday+"\t"+time+"\t"+message+"\n")
     csv.close()
-    print("twitter.csv created!")
-            
-
-def read_csv(filepath):
-    return pd.read_csv(filepath+"twitter.csv", sep = "\t")
+    print(filename+ " created!")
+    
+def make_relationship_csv(twittergraph, filepath, filename = "user_relationship.csv"):
+    print("Making CSV file for relationships...")
+    csv = open(filepath + filename, 'w') 
+    csv.write("username\tuser_mentioned\tnum_times_mentioned\n")
+    for twitteruser in twittergraph:
+        username = twitteruser.name
+        for recipient, weight in twitteruser.relations.items():
+            weight = str(weight)
+            csv.write(username+"\t"+recipient+"\t"+weight+"\n")
+    csv.close()
+    print(filename+ " created!")
+    
+def read_csv(filepath, filename ="tweets.csv"):
+    return pd.read_csv(filepath+filename, sep = "\t")
 
 twittergraph = TwitterGraph("twitterdata/") 
 make_csv(twittergraph, "data/")
