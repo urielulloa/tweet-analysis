@@ -6,3 +6,7 @@ It also includes a tool for exporting the collected data as csv file for the pur
 You can find the required data using this link: http://lst.science.ru.nl/~proycon/twitterdata.zip
 
 *Requires mathplotlib and numpy for running data visualization tools. Pandas required for reading cvs files. Run in Python3 to avoid issues.
+
+Possible Future Goals/ Things to Learn: 
+  - Improve data visuals and statistics produced.
+  - Add Front-End/Back-End components to make the program user-friendly.
